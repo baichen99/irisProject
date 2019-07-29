@@ -1,4 +1,4 @@
 ## todo
-1. auth 中间件
-2. UserController的Login
-3. ...
+1. 跨域
+2. 权限控制
+3. 前端
