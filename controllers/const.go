@@ -14,6 +14,18 @@ func (f UserCreateForm) ConvertToModel() models.User {
 	}
 }
 
+type UserLoginForm struct {
+	Username string	`json:"username"`
+	Password string	`json:"password"`
+}
+
+func (f UserLoginForm) ConvertToModel() models.User {
+	return models.User{
+		Username: f.Username,
+		Password: f.Password,
+	}
+}
+
 type UserUpdateForm struct {
 	Username string	`json:"username"`
 	Password string	`json:"password"`

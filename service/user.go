@@ -23,7 +23,7 @@ func NewUserService(db *gorm.DB) UserInterface {
 type UserInterface interface {
 	GetUserList(parameters utils.GetUserListParameters) (users []models.User, count int, err error)
 	CreateUser(user models.User) (err error)
-	GetUser(id int) (user models.User, err error)
+	GetUser(key string, value interface{}) (user models.User, err error)
 	UpdateUser(id int, newUser models.User) (err error)
 	DeleteUser(id int) (err error)
 }
@@ -54,9 +54,13 @@ func (s *UserService) CreateUser(user models.User) (err error) {
 }
 
 // GetUser Get a user by id
-func (s *UserService) GetUser(id int) (user models.User, err error) {
-	err = s.DB.Where("id = ?", id).Take(&user).Error
-	// err = s.DB.Model(&user).Where("id = ?", id).Take(&user).Error
+func (s *UserService) GetUser(key string, value interface{}) (user models.User, err error) {
+	switch key {
+	case "id":
+		err = s.DB.Where("id = ?", value).Take(&user).Error
+	case "username":
+		err = s.DB.Where("username = ?", value).Take(&user).Error
+	}
 	return
 }
 
