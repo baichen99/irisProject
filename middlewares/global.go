@@ -1,8 +1,9 @@
 package middlewares
 
 import (
-	"github.com/dgrijalva/jwt-go"
 	"irisProject/config"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 // middleware configs
@@ -17,6 +18,7 @@ var I18nConf = I18nConfig{
 	},
 }
 
+// JWTConf is config for JWTMiddleware
 var JWTConf = JWTConfig{
 	ValidationKeyGetter: func(*Token) (interface{}, error) {
 		key, err := jwt.ParseECPublicKeyFromPEM([]byte(config.Conf.JWT.PublicBytes))
@@ -25,9 +27,12 @@ var JWTConf = JWTConfig{
 		}
 		return key, nil
 	},
-	Extractor: FromAuthHeader,
+	Extractor:     FromAuthHeader,
 	SigningMethod: SigningMethodES512,
 }
 
 // CheckJWTToken is a user authorization middleware
 var CheckJWTToken = NewJWTMiddleware(JWTConf).Serve
+
+// CorsAllowAll is a cors middleware that allow all methods/origins
+var CorsAllowAll = AllowAll()

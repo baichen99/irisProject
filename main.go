@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/kataras/iris"
-	"github.com/kataras/iris/mvc"
 	"irisProject/config"
 	"irisProject/controllers"
 	"irisProject/middlewares"
 	"irisProject/service"
 	"irisProject/utils"
+
+	"github.com/kataras/iris"
+	"github.com/kataras/iris/mvc"
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 func initApp() *iris.Application {
 	app := iris.Default()
 	app.Use(middlewares.NewI18nMiddleware(middlewares.I18nConf))
+	app.Use(middlewares.CorsAllowAll)
 	return app
 }
 
@@ -37,5 +39,3 @@ func test() {
 	println(config.Conf.JWT.PrivateBytes)
 
 }
-
-
