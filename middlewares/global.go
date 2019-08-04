@@ -36,3 +36,5 @@ var CheckJWTToken = NewJWTMiddleware(JWTConf).Serve
 
 // CorsAllowAll is a cors middleware that allow all methods/origins
 var CorsAllowAll = AllowAll()
+
+var GetJwtParams = NewJWTMiddleware(JWTConf).Get

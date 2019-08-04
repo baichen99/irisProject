@@ -20,5 +20,17 @@ func ConnectDB() (db *gorm.DB) {
 func InitDB(db *gorm.DB) *gorm.DB {
 	db.DropTableIfExists(&models.User{})
 	db.AutoMigrate(&models.User{})
+
 	return db
+}
+
+// InitAdmin add admin
+func InitAdmin(db *gorm.DB) {
+	password, _ := HashPassword("password")
+	user1 := models.User{
+		Username: "admin",
+		Password: password,
+		Role: "admin",
+	}
+	db.Create(&user1)
 }

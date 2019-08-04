@@ -15,6 +15,7 @@ func main() {
 	app := initApp()
 	db := utils.ConnectDB()
 	utils.InitDB(db)
+	utils.InitAdmin(db)
 	mvc.Configure(app.Party("/user"), func(app *mvc.Application) {
 		app.Register(service.NewUserService(db))
 		app.Handle(new(controllers.UserController))

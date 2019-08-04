@@ -3,6 +3,7 @@ package service
 import (
 	"irisProject/models"
 	"irisProject/utils"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -24,8 +25,8 @@ type UserInterface interface {
 	GetUserList(parameters utils.GetUserListParameters) (users []models.User, count int, err error)
 	CreateUser(user models.User) (err error)
 	GetUser(key string, value interface{}) (user models.User, err error)
-	UpdateUser(id int, newUser models.User) (err error)
-	DeleteUser(id int) (err error)
+	UpdateUser(key string, value interface{}, newUser models.User) (err error)
+	DeleteUser(key string, value interface{}) (err error)
 }
 
 // GetUserList return users
@@ -45,6 +46,8 @@ func (s *UserService) GetUserList(parameters utils.GetUserListParameters) (users
 
 // CreateUser create a new user
 func (s *UserService) CreateUser(user models.User) (err error) {
+	user.CreateAt = time.Now()
+	user.Role = "user"
 	user.Password, err = utils.HashPassword(user.Password)
 	err = s.DB.Create(&user).Error
 	if err != nil {
@@ -65,7 +68,7 @@ func (s *UserService) GetUser(key string, value interface{}) (user models.User, 
 }
 
 // UpdateUser update a user record
-func (s *UserService) UpdateUser(id int, newUser models.User) (err error) {
+func (s *UserService) UpdateUser(key string, value interface{}, newUser models.User) (err error) {
 	var user models.User
 	if newUser.Password != "" {
 		newUser.Password, err = utils.HashPassword(newUser.Password)
@@ -73,13 +76,23 @@ func (s *UserService) UpdateUser(id int, newUser models.User) (err error) {
 			return
 		}
 	}
-	err = s.DB.Where("id = ?", id).Take(&user).Updates(&newUser).Error
+	switch key {
+		case "id":
+			err = s.DB.Where("id = ?", value).Update(&user).Error
+		case "username":
+			err = s.DB.Where("username = ?", value).Update(&user).Error
+	}
 	return
 }
 
 // DeleteUser delete a user record
-func (s *UserService) DeleteUser(id int) (err error) {
+func (s *UserService) DeleteUser(key string, value interface{}) (err error) {
 	var user models.User
-	err = s.DB.Where("id = ?", id).Delete(&user).Error
+	switch key {
+		case "id":
+			err = s.DB.Where("id = ?", value).Delete(&user).Error
+		case "username":
+			err = s.DB.Where("username = ?", value).Delete(&user).Error
+	}
 	return
 }

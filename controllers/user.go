@@ -16,10 +16,10 @@ type UserController struct {
 func (c *UserController) BeforeActivation(app mvc.BeforeActivation) {
 	app.Handle("POST", "/login", "Login")
 	app.Handle("GET", "/", "GetUserList", middlewares.CheckJWTToken)
-	app.Handle("GET", "/{id:int}", "GetUser")
-	app.Handle("POST", "/", "CreateUser")
-	app.Handle("DELETE", "/{id:int}", "DeleteUser")
-	app.Handle("PUT", "/{id:int}", "UpdateUser", middlewares.CheckJWTToken)
+	app.Handle("GET", "/{username:string}", "GetUser", middlewares.CheckJWTToken)
+	app.Handle("POST", "/", "CreateUser",middlewares.CheckJWTToken, middlewares.CheckAdminRole)
+	app.Handle("DELETE", "/{username:string}", "DeleteUser", middlewares.CheckJWTToken)
+	app.Handle("PUT", "/{username:string}", "UpdateUser", middlewares.CheckJWTToken)
 }
 
 func (c *UserController) Login() {
@@ -41,7 +41,7 @@ func (c *UserController) Login() {
 		return
 	}
 
-	token, _ := middlewares.SignJWTToken(user.ID)
+	token, _ := middlewares.SignJWTToken(user.ID, user.Role)
 		c.Context.JSON(iris.Map{
 		"message": "success",
 		"data":    token,
@@ -82,8 +82,8 @@ func (c *UserController) GetUserList() {
 
 
 func (c *UserController) GetUser() {
-	id := c.Context.Params().GetIntDefault("id", 0)
-	user, err := c.Service.GetUser("id", id)
+	username := c.Context.Params().GetStringDefault("username", "")
+	user, err := c.Service.GetUser("username", username)
 	if err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService::GetUser", err)
 		return
@@ -117,8 +117,9 @@ func (c *UserController) CreateUser() {
 
 
 func (c *UserController) DeleteUser() {
-	id := c.Context.Params().GetIntDefault("id", 0)
-	if err := c.Service.DeleteUser(id); err != nil {
+	c.Context.Next()
+	username := c.Context.Params().GetStringDefault("username", "")
+	if err := c.Service.DeleteUser("username", username); err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService::DeleteUser", err)
 		return
 	}
@@ -129,14 +130,14 @@ func (c *UserController) DeleteUser() {
 
 func (c *UserController) UpdateUser() {
 	c.Context.Next()
-	id := c.Context.Params().GetIntDefault("id", 0)
+	username := c.Context.Params().GetStringDefault("username", "")
 	var form UserUpdateForm
 	if err := utils.ReadValidateForm(c.Context, &form); err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService:UpdateUser", err)
 		return
 	}
 
-	if err := c.Service.UpdateUser(id, form.ConvertToModel()); err != nil {
+	if err := c.Service.UpdateUser("username", username, form.ConvertToModel()); err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService:UpdateUser", err)
 		return
 	}

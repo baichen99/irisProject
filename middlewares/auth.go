@@ -4,6 +4,7 @@ package middlewares
 import (
 	"errors"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"irisProject/config"
 	"strings"
 
@@ -150,8 +151,18 @@ func logf(ctx iris.Context, format string, args ...interface{}) {
 }
 
 // Get returns the user (&token) information for this client/request
-func (m *JWTMiddleware) Get(ctx context.Context) *jwt.Token {
-	return ctx.Values().Get(m.Config.ContextKey).(*jwt.Token)
+func (m *JWTMiddleware) Get(ctx context.Context) (username, role string) {
+	parsedToken := ctx.Values().Get(m.Config.ContextKey)
+	if parsedToken == nil {
+		ctx.StopExecution()
+	} else {
+		payload, _ := parsedToken.(*jwt.Token)
+		params, _ := payload.Claims.(jwt.MapClaims)
+		username = params["user"].(string)
+		role = params["role"].(string)
+	}
+	return
+
 }
 
 // Serve the middleware's action
@@ -221,13 +232,14 @@ var (
 )
 
 // SignJWTToken is used for sign a JWT Token for clients
-func SignJWTToken(userID int) (string, error) {
+func SignJWTToken(userID uuid.UUID, role string) (string, error) {
 	payload := jwt.NewWithClaims(jwt.SigningMethodES512, jwt.MapClaims{
-		"iss":  config.Conf.App.Name,                                                          // Issuer
+		"iss":  config.Conf.App.Name,                                                          	// Issuer
 		"iat":  time.Now().Unix(),                                                              // Issued At
 		"nbf":  time.Now().Unix(),                                                              // Not Before 		// JWT Token ID
-		"exp":  time.Now().Add(time.Hour * time.Duration(config.Conf.JWT.ExpireHours)).Unix(), // Expiration Time
-		"user": string(userID),                                                                // Username 		// Role of User: Admin/User/etc...
+		"exp":  time.Now().Add(time.Hour * time.Duration(config.Conf.JWT.ExpireHours)).Unix(), 	// Expiration Time
+		"user": userID,                                                               			// Username 		// Role of User: Admin/User/etc...
+		"role": role,																			// Role
 	})
 	key, _ := jwt.ParseECPrivateKeyFromPEM([]byte(config.Conf.JWT.PrivateBytes))
 	token, err := payload.SignedString(key)
