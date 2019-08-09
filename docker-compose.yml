@@ -27,7 +27,6 @@ services:
     networks: 
       - backend
 networks: 
-  # 自定义网络
   backend:
     driver: bridge
 
