@@ -1,0 +1,33 @@
+version: '3'
+services:
+  postgres:
+    image: postgres
+    restart: always
+    env_file:
+      - env_file
+    ports:
+      - 5432:5432
+    volumes: 
+      - /Users/chenbai/Documents/docker/iris/potsgres:/var/lib/postgresql/data
+    networks: 
+      - backend
+
+  irisApi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: iris:1.0
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - env_file
+    ports: 
+      - 8080:8080
+    networks: 
+      - backend
+networks: 
+  # 自定义网络
+  backend:
+    driver: bridge
+

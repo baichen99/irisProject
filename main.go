@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"irisProject/config"
 	"irisProject/controllers"
 	"irisProject/middlewares"
 	"irisProject/service"
 	"irisProject/utils"
+
+	"github.com/kataras/iris/middleware/logger"
+	"github.com/kataras/iris/middleware/recover"
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
@@ -24,19 +28,25 @@ func main() {
 		app.Handle(new(controllers.RootController))
 	})
 
+	test()
+
 	app.Run(iris.Addr(":8080"))
-	//test()
 }
 
 func initApp() *iris.Application {
-	app := iris.Default()
+	app := iris.New()
+	app.Use(recover.New())
+	app.Use(logger.New())
 	app.Use(middlewares.NewI18nMiddleware(middlewares.I18nConf))
 	app.Use(middlewares.CorsAllowAll)
+	app.Use(middlewares.BeforeRequest)
+	app.Done(middlewares.AfterRequest)
+
 	return app
 }
 
 func test() {
 	// get config
-	println(config.Conf.JWT.PrivateBytes)
+	fmt.Println(config.Conf)
 
 }

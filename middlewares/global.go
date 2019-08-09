@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"github.com/kataras/iris"
 	"irisProject/config"
 
 	"github.com/dgrijalva/jwt-go"
@@ -38,3 +39,13 @@ var CheckJWTToken = NewJWTMiddleware(JWTConf).Serve
 var CorsAllowAll = AllowAll()
 
 var GetJwtParams = NewJWTMiddleware(JWTConf).Get
+
+func BeforeRequest(ctx iris.Context) {
+	defer ctx.Next()
+	ctx.Application().Logger().Info("=============== REQUEST START ===============")
+}
+
+func AfterRequest(ctx iris.Context) {
+	defer ctx.Next()
+	ctx.Application().Logger().Info("=============== REQUEST END ===============")
+}

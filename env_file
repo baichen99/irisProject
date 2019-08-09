@@ -1,0 +1,5 @@
+POSTGRES_USER=iris
+POSTGRES_PASSWORD=password
+POSTGRES_DB=iris
+APP_SECRET_KEY=secret
+iris_env=dev
