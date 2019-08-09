@@ -1,6 +1,9 @@
-# issue
-运行
-docker-compose build
-docker-compose up
-irisApi容器不能连接到postgres容器，导致报错
-设置network也不行
+## 已完成
+- jwt
+- cors
+- i18n
+- 权限控制
+
+## todo
+- 文件上传  
+- 前端
