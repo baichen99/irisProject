@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"irisProject/config"
 	"irisProject/controllers"
 	"irisProject/middlewares"
 	"irisProject/service"
@@ -28,8 +26,6 @@ func main() {
 		app.Handle(new(controllers.RootController))
 	})
 
-	test()
-
 	app.Run(iris.Addr(":8080"))
 }
 
@@ -43,10 +39,4 @@ func initApp() *iris.Application {
 	app.Done(middlewares.AfterRequest)
 
 	return app
-}
-
-func test() {
-	// get config
-	fmt.Println(config.Conf)
-
 }

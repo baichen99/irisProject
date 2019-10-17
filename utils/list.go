@@ -20,12 +20,14 @@ type GetUserListParameters struct {
 }
 
 // SearchByColumn 模糊搜索
-func SearchByColumn(column string, searchString string) func(db *gorm.DB) *gorm.DB {
+func SearchByColumn(columnName string, searchString string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if searchString != "" {
-			queryString := column + " LIKE ?"
-			value := "% " + searchString + " %"
-			db.Where(queryString, value)
+			// add % to prefix and suffix to match search
+			// SQL search: SELECT * FROM column_name WHERE query LIKE value
+			value := "%" + searchString + "%"
+			query := columnName + " LIKE ?"
+			return db.Where(query, value)
 		}
 		return db
 	}

@@ -31,16 +31,17 @@ type UserInterface interface {
 
 // GetUserList return users
 func (s *UserService) GetUserList(parameters utils.GetUserListParameters) (users []models.User, count int, err error) {
-	var user models.User
 	db := s.DB.Scopes(
 		utils.SearchByColumn("username", parameters.Username),
 	)
-	err = db.Model(&users).Count(&count).Error
+	queryExp := db.Joins("JOIN profiles ON profiles.id = users.profile_id")
+	err = queryExp.Find(&users).Count(&count).Error
+
 	if err != nil {
 		return
 	}
 
-	err = db.Model(&user).Offset((parameters.Page - 1) * parameters.Limit).Limit(parameters.Limit).Scan(&users).Error
+	err = queryExp.Set("gorm:auto_preload", true).Offset((parameters.Page - 1) * parameters.Limit).Limit(parameters.Limit).Find(&users).Error
 	return
 }
 
@@ -77,10 +78,10 @@ func (s *UserService) UpdateUser(key string, value interface{}, newUser models.U
 		}
 	}
 	switch key {
-		case "id":
-			err = s.DB.Where("id = ?", value).Update(&user).Error
-		case "username":
-			err = s.DB.Where("username = ?", value).Update(&user).Error
+	case "id":
+		err = s.DB.Where("id = ?", value).Update(&user).Error
+	case "username":
+		err = s.DB.Where("username = ?", value).Update(&user).Error
 	}
 	return
 }
@@ -89,10 +90,10 @@ func (s *UserService) UpdateUser(key string, value interface{}, newUser models.U
 func (s *UserService) DeleteUser(key string, value interface{}) (err error) {
 	var user models.User
 	switch key {
-		case "id":
-			err = s.DB.Where("id = ?", value).Delete(&user).Error
-		case "username":
-			err = s.DB.Where("username = ?", value).Delete(&user).Error
+	case "id":
+		err = s.DB.Where("id = ?", value).Delete(&user).Error
+	case "username":
+		err = s.DB.Where("username = ?", value).Delete(&user).Error
 	}
 	return
 }

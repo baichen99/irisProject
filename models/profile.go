@@ -1,7 +1,6 @@
 package models
 
-type profile struct {
+type Profile struct {
 	Base
-	UserID  int    `json:"user_id"`
 	Content string `json:"content"`
 }

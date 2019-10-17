@@ -1,7 +1,7 @@
 App:
   Name: irisProject
 Postgres:
-  host: postgres
+  host: localhost
   port: 5432
   user: iris
   password: password
