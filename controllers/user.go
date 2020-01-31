@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"github.com/kataras/iris"
-	"github.com/kataras/iris/mvc"
+	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/mvc"
 	"irisProject/middlewares"
 	"irisProject/service"
 	"irisProject/utils"
@@ -17,7 +17,7 @@ func (c *UserController) BeforeActivation(app mvc.BeforeActivation) {
 	app.Handle("POST", "/login", "Login")
 	app.Handle("GET", "/", "GetUserList", middlewares.CheckJWTToken)
 	app.Handle("GET", "/{username:string}", "GetUser", middlewares.CheckJWTToken)
-	app.Handle("POST", "/", "CreateUser",middlewares.CheckJWTToken, middlewares.CheckAdminRole)
+	app.Handle("POST", "/", "CreateUser", middlewares.CheckJWTToken, middlewares.CheckSuper)
 	app.Handle("DELETE", "/{username:string}", "DeleteUser", middlewares.CheckJWTToken)
 	app.Handle("PUT", "/{username:string}", "UpdateUser", middlewares.CheckJWTToken)
 }
@@ -42,12 +42,10 @@ func (c *UserController) Login() {
 	}
 
 	token, _ := middlewares.SignJWTToken(user.ID, user.Role)
-		c.Context.JSON(iris.Map{
+	c.Context.JSON(iris.Map{
 		"message": "success",
-		"data":    token,
+		"token":   token,
 	})
-
-
 
 }
 
@@ -60,7 +58,7 @@ func (c *UserController) GetUserList() {
 	}
 	listParameters := utils.GetUserListParameters{
 		GetListParameters: listParams,
-		Username: username,
+		Username:          username,
 	}
 
 	users, count, err := c.Service.GetUserList(listParameters)
@@ -69,17 +67,16 @@ func (c *UserController) GetUserList() {
 	}
 
 	c.Context.JSON(iris.Map{
-			"message": "success",
-			"data": iris.Map{
-				"users":  users,
-				"pageKey":  listParams.Page,
-				"limitKey": listParams.Limit,
-				"totalKey": count,
-			},
-		})
+		"message": "success",
+		"data": iris.Map{
+			"users":    users,
+			"pageKey":  listParams.Page,
+			"limitKey": listParams.Limit,
+			"totalKey": count,
+		},
+	})
 
 }
-
 
 func (c *UserController) GetUser() {
 	username := c.Context.Params().GetStringDefault("username", "")
@@ -91,7 +88,7 @@ func (c *UserController) GetUser() {
 
 	c.Context.JSON(iris.Map{
 		"message": "success",
-		"data": user,
+		"data":    user,
 	})
 
 }
@@ -110,11 +107,10 @@ func (c *UserController) CreateUser() {
 
 	c.Context.StatusCode(iris.StatusCreated)
 	c.Context.JSON(iris.Map{
-		"message" : "success",
+		"message": "success",
 	})
 
 }
-
 
 func (c *UserController) DeleteUser() {
 	c.Context.Next()
@@ -126,7 +122,6 @@ func (c *UserController) DeleteUser() {
 
 	c.Context.StatusCode(iris.StatusNoContent)
 }
-
 
 func (c *UserController) UpdateUser() {
 	c.Context.Next()

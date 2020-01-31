@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/kataras/iris"
+	"github.com/kataras/iris/v12"
 	"runtime"
 	"gopkg.in/go-playground/validator.v9"
 )

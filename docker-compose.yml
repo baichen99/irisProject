@@ -2,6 +2,7 @@ version: '3'
 services:
   postgres:
     image: postgres
+    container_name: irisPostgres
     restart: always
     env_file:
       - env_file
@@ -9,10 +10,9 @@ services:
       - 5432:5432
     volumes: 
       - /var/lib/postgresql/data:/var/lib/postgresql/data
-    networks: 
-      - backend
 
   irisApi:
+    container_name: irisApi
     build:
       context: .
       dockerfile: Dockerfile
@@ -24,10 +24,5 @@ services:
       - ./env_file
     ports: 
       - 8080:8080
-    networks: 
-      - backend
-networks:
 
-  backend:
-    driver: bridge
 

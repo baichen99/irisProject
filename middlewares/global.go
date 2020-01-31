@@ -1,23 +1,12 @@
 package middlewares
 
 import (
-	"github.com/kataras/iris"
-	"irisProject/config"
-
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kataras/iris/v12"
+	"irisProject/config"
 )
 
 // middleware configs
-
-var I18nConf = I18nConfig{
-	Default:      "en-US",
-	URLParameter: "lang",
-	Languages: map[string]string{
-		// 相对于main.go
-		"en-US": "./locales/en-US.ini",
-		"zh-CN": "./locales/zh-CN.ini",
-	},
-}
 
 // JWTConf is config for JWTMiddleware
 var JWTConf = JWTConfig{
@@ -38,7 +27,10 @@ var CheckJWTToken = NewJWTMiddleware(JWTConf).Serve
 // CorsAllowAll is a cors middleware that allow all methods/origins
 var CorsAllowAll = AllowAll()
 
-var GetJwtParams = NewJWTMiddleware(JWTConf).Get
+var GetJWTParams = NewJWTMiddleware(JWTConf).Get
+var CheckSuper = NewRoleMiddleware(roleConfig{
+	Role: "Super",
+}).Serve
 
 func BeforeRequest(ctx iris.Context) {
 	defer ctx.Next()

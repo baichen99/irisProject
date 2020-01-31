@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/kataras/iris"
+	"github.com/kataras/iris/v12"
 )
 
 // GetListParameters base parameters needed to define the get list queries

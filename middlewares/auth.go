@@ -1,19 +1,17 @@
 package middlewares
 
-// clone from https://github.com/iris-contrib/middleware/
 import (
 	"errors"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
-	"irisProject/config"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
-
+	"irisProject/config"
 	"time"
 
-	"github.com/kataras/iris"
-	"github.com/kataras/iris/context"
+	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/context"
 )
 
 const (
@@ -21,7 +19,7 @@ const (
 	DefaultContextKey = "jwt"
 )
 
-// JWTConfig is a struct for specifying configuration options for the jwt middleware.
+// Config is a struct for specifying configuration options for the jwt middleware.
 type JWTConfig struct {
 	// The function that will return the Key to validate the JWT.
 	// It can be either a shared secret or a public key.
@@ -103,14 +101,14 @@ type errorHandler func(context.Context, error)
 // be treated as an error.  An empty string should be returned in that case.
 type TokenExtractor func(context.Context) (string, error)
 
-// JWTMiddleware the middleware for JSON Web tokens authentication method
+// Middleware the middleware for JSON Web tokens authentication method
 type JWTMiddleware struct {
 	Config JWTConfig
 }
 
 // OnError is the default error handler.
 // Use it to change the behavior for each error.
-// See `JWTConfig.ErrorHandler`.
+// See `Config.ErrorHandler`.
 func OnError(ctx context.Context, err error) {
 	if err == nil {
 		return
@@ -121,7 +119,7 @@ func OnError(ctx context.Context, err error) {
 	ctx.WriteString(err.Error())
 }
 
-// NewJWTMiddleware constructs a new Secure instance with supplied options.
+// New constructs a new Secure instance with supplied options.
 func NewJWTMiddleware(cfg ...JWTConfig) *JWTMiddleware {
 
 	var c JWTConfig
@@ -151,18 +149,17 @@ func logf(ctx iris.Context, format string, args ...interface{}) {
 }
 
 // Get returns the user (&token) information for this client/request
-func (m *JWTMiddleware) Get(ctx context.Context) (username, role string) {
-	parsedToken := ctx.Values().Get(m.Config.ContextKey)
-	if parsedToken == nil {
+func (m *JWTMiddleware) Get(ctx context.Context) (user string, role string) {
+	headers := ctx.Values().Get(m.Config.ContextKey)
+	if headers == nil {
 		ctx.StopExecution()
 	} else {
-		payload, _ := parsedToken.(*jwt.Token)
+		payload, _ := headers.(*jwt.Token)
 		params, _ := payload.Claims.(jwt.MapClaims)
-		username = params["user"].(string)
+		user = params["user"].(string)
 		role = params["role"].(string)
 	}
 	return
-
 }
 
 // Serve the middleware's action
@@ -231,20 +228,7 @@ var (
 	ErrTokenExpired = errors.New("token is expired")
 )
 
-// SignJWTToken is used for sign a JWT Token for clients
-func SignJWTToken(userID uuid.UUID, role string) (string, error) {
-	payload := jwt.NewWithClaims(jwt.SigningMethodES512, jwt.MapClaims{
-		"iss":  config.Conf.App.Name,                                                          	// Issuer
-		"iat":  time.Now().Unix(),                                                              // Issued At
-		"nbf":  time.Now().Unix(),                                                              // Not Before 		// JWT Token ID
-		"exp":  time.Now().Add(time.Hour * time.Duration(config.Conf.JWT.ExpireHours)).Unix(), 	// Expiration Time
-		"user": userID,                                                               			// Username 		// Role of User: Admin/User/etc...
-		"role": role,																			// Role
-	})
-	key, _ := jwt.ParseECPrivateKeyFromPEM([]byte(config.Conf.JWT.PrivateBytes))
-	token, err := payload.SignedString(key)
-	return token, err
-}
+var jwtParser = new(jwt.Parser)
 
 // CheckJWT the main functionality, checks for token
 func (m *JWTMiddleware) CheckJWT(ctx context.Context) error {
@@ -281,7 +265,7 @@ func (m *JWTMiddleware) CheckJWT(ctx context.Context) error {
 
 	// Now parse the token
 
-	parsedToken, err := jwt.Parse(token, m.Config.ValidationKeyGetter)
+	parsedToken, err := jwtParser.Parse(token, m.Config.ValidationKeyGetter)
 	// Check if there was an error in parsing...
 	if err != nil {
 		logf(ctx, "Error parsing token: %v", err)
@@ -319,4 +303,20 @@ func (m *JWTMiddleware) CheckJWT(ctx context.Context) error {
 	ctx.Values().Set(m.Config.ContextKey, parsedToken)
 
 	return nil
+}
+
+func SignJWTToken(userID uuid.UUID, role string) (string, error) {
+	tokenID := uuid.NewV4()
+	payload := jwt.NewWithClaims(jwt.SigningMethodES512, jwt.MapClaims{
+		"iss":  config.Conf.App.Name,                                                          // Issuer
+		"iat":  time.Now().Unix(),                                                             // Issued At
+		"nbf":  time.Now().Unix(),                                                             // Not Before
+		"jti":  tokenID,                                                                       // JWT Token ID
+		"exp":  time.Now().Add(time.Hour * time.Duration(config.Conf.JWT.ExpireHours)).Unix(), // Expiration Time
+		"user": userID.String(),                                                               // UserID
+		"role": role,                                                                          // Role of User: Admin/User/etc...
+	})
+	key, _ := jwt.ParseECPrivateKeyFromPEM([]byte(config.Conf.JWT.PrivateBytes))
+	token, err := payload.SignedString(key)
+	return token, err
 }
