@@ -1,8 +1,10 @@
 package models
 
+import "github.com/lib/pq"
+
 // user teacher 多对多
 type Teacher struct {
 	Base
-	Name     string `gorm:"NOT NULL" json:"name"`
-	Students []User `gorm:"MANY2MANY:student_teacher;JOINTABLE_FOREIGNKEY:StudentID" json:"students"`
+	Name       string         `gorm:"NOT NULL" json:"name"`
+	StudentsID pq.StringArray `gorm:"TYPE:uuid[];NOT NULL;DEFAULT:array[]::uuid[];"`
 }

@@ -36,7 +36,7 @@ func SearchByColumn(columnName string, searchString string) func(db *gorm.DB) *g
 // FilterByColumn 精确搜索
 func FilterByColumn(columnName string, value string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		// SQL select: SELECT * FROM column_name WHERE query = value
+		// SQL select: SELECT * FROM table WHERE columnName = value
 		if value != "" {
 			query := columnName + " = ?"
 			return db.Where(query, value)

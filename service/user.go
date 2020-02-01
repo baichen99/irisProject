@@ -41,7 +41,7 @@ func (s *UserService) GetUserList(parameters utils.GetUserListParameters) (users
 		return
 	}
 
-	err = queryExp.Set("gorm:auto_preload", true).Offset((parameters.Page - 1) * parameters.Limit).Limit(parameters.Limit).Find(&users).Error
+	err = queryExp.Offset((parameters.Page - 1) * parameters.Limit).Limit(parameters.Limit).Find(&users).Error
 	return
 }
 

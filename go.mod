@@ -19,6 +19,7 @@ require (
 	github.com/kataras/iris v11.1.1+incompatible
 	github.com/kataras/iris/v12 v12.1.4
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/lib/pq v1.1.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0

@@ -8,7 +8,6 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	uuid "github.com/satori/go.uuid"
 )
 
 // ConnectDB connect to a psql database
@@ -25,10 +24,7 @@ func ConnectDB() (db *gorm.DB) {
 
 // InitDB initialize database
 func InitDB(db *gorm.DB) *gorm.DB {
-	// 创建迁移表
-	db.DropTableIfExists("student_teacher")
 	db.DropTableIfExists(&models.User{}, &models.Teacher{}, &models.Profile{})
-	db.Table("student_teacher").CreateTable(&StudentTeacher{})
 	db.AutoMigrate(&models.User{}, &models.Teacher{}, &models.Profile{})
 
 	var user models.User
@@ -49,14 +45,16 @@ func InitDB(db *gorm.DB) *gorm.DB {
 
 	db.Find(&users)
 	for _, u := range users {
+		// random choose a teacher record
 		db.First(&teacher)
-		db.Table("student_teacher").Create(&StudentTeacher{StudentID: u.ID, TeacherID: teacher.ID})
+		// UPDATE teachers SET students_id = array_append(students_id, 'ae1a635b-b9a5-4bd5-a3cb-5fbd42e15f1c')
+		// WHERE teachers.id = '698b4b89-9607-4fed-9283-7584a8e94fc4';
+		db.Model(&u).Where("id = ?", u.ID).Update("teachers_id", append(user.TeachersID, teacher.ID.String()))
 	}
 
 	// 手动添加外键
-	db.Model(&models.User{}).AddForeignKey("profile_id", "profiles(id)", "RESTRICT", "CASCADE")
-	db.Table("student_teacher").AddForeignKey("student_id", "users(id)", "RESTRICT", "CASCADE").AddForeignKey("teacher_id", "teachers(id)", "RESTRICT", "CASCADE")
-
+	db.Model(&models.User{}).
+		AddForeignKey("profile_id", "profiles(id)", "RESTRICT", "CASCADE")
 	return db
 }
 
@@ -73,9 +71,4 @@ func InitAdmin(db *gorm.DB) {
 	}
 
 	db.Create(&user1)
-}
-
-type StudentTeacher struct {
-	StudentID uuid.UUID `gorm:"uuid;PRIMARYKEY"`
-	TeacherID uuid.UUID `gorm:"uuid;PRIMARYKEY"`
 }
