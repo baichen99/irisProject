@@ -1,5 +1,6 @@
 App:
   Name: irisProject
+  LimitPerMin: 20
 Postgres:
   host: localhost
   port: 5432
@@ -26,4 +27,5 @@ JWT:
     -----END PUBLIC KEY-----
 File:
   SaveDir: /User/chenbai/Temp/
+
 

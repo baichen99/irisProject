@@ -35,6 +35,7 @@ func initApp() *iris.Application {
 	app := iris.New()
 	app.Use(recover.New())
 	app.Use(logger.New())
+	app.OnAnyErrorCode(middlewares.ErrorHandler)
 
 	app.I18n.Load("./locales/*/*.ini", "en-US", "zh-CN")
 
