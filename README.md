@@ -16,7 +16,7 @@ fab run
 - role
 
 ## todo
+- 修复中间件执行顺序的bug
 - log file
 - 文件上传  
-
 
