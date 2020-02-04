@@ -1,9 +1,11 @@
 package middlewares
 
 import (
+	"irisProject/config"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kataras/iris/v12"
-	"irisProject/config"
+	uuid "github.com/satori/go.uuid"
 )
 
 // middleware configs
@@ -32,12 +34,16 @@ var CheckSuper = NewRoleMiddleware(roleConfig{
 	Role: "Super",
 }).Serve
 
-func BeforeRequest(ctx iris.Context) {
+func BeforeHandleRequest(ctx iris.Context) {
 	defer ctx.Next()
-	ctx.Application().Logger().Info("=============== REQUEST START ===============")
+	requestID := uuid.NewV4().String()
+	ctx.Values().Set("RequestID", requestID)
+	ctx.Application().Logger().Infof("=====================REQUEST " + requestID + " START====================")
 }
 
-func AfterRequest(ctx iris.Context) {
+// AfterHandleRequest is a global middleware after handle a request
+func AfterHandleRequest(ctx iris.Context) {
 	defer ctx.Next()
-	ctx.Application().Logger().Info("=============== REQUEST END ===============")
+	requestID := ctx.Values().Get("RequestID").(string)
+	ctx.Application().Logger().Infof("=====================REQUEST " + requestID + " END====================")
 }

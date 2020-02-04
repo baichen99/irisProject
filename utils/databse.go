@@ -24,7 +24,7 @@ func ConnectDB() (db *gorm.DB) {
 
 // InitDB initialize database
 func InitDB(db *gorm.DB) *gorm.DB {
-	db.DropTableIfExists(&models.User{}, &models.Teacher{}, &models.Profile{})
+	db.DropTableIfExists(&models.Profile{}, &models.User{}, &models.Teacher{})
 	db.AutoMigrate(&models.User{}, &models.Teacher{}, &models.Profile{})
 
 	var user models.User
@@ -34,13 +34,14 @@ func InitDB(db *gorm.DB) *gorm.DB {
 	user.Password, _ = HashPassword("password")
 	// 生成数据	 建立关系
 	for i := 1; i <= 10; i++ {
+		user.Role = "user"
 		user.Username = "user_" + strconv.Itoa(i)
 		teacher.Name = "teacher_" + strconv.Itoa(i)
 		profile.Content = "profile_" + strconv.Itoa(i)
 		db.Create(&user)
 		db.Create(&teacher)
 		db.Create(&profile)
-		db.Model(&models.User{}).Where("id = ?", user.ID).Update("profile_id", profile.ID)
+		db.Model(&models.Profile{}).Where("id = ?", profile.ID).Update("creator_id", user.ID)
 	}
 
 	db.Find(&users)
@@ -53,8 +54,8 @@ func InitDB(db *gorm.DB) *gorm.DB {
 	}
 
 	// 手动添加外键
-	db.Model(&models.User{}).
-		AddForeignKey("profile_id", "profiles(id)", "RESTRICT", "CASCADE")
+	db.Model(&models.Profile{}).
+		AddForeignKey("creator_id", "users(id)", "RESTRICT", "CASCADE")
 	return db
 }
 
@@ -62,13 +63,13 @@ func InitDB(db *gorm.DB) *gorm.DB {
 func InitAdmin(db *gorm.DB) {
 	var profile models.Profile
 	password, _ := HashPassword("password")
-	db.Create(&profile)
-	user1 := models.User{
-		Username:  "admin",
-		Password:  password,
-		Role:      "admin",
-		ProfileID: profile.ID,
+	admin := models.User{
+		Username: "admin",
+		Password: password,
+		Role:     "super",
 	}
+	db.Create(&admin)
+	profile.CreatorID = admin.ID
+	db.Create(&profile)
 
-	db.Create(&user1)
 }

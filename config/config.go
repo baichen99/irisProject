@@ -11,7 +11,8 @@ var Conf, err = ReadConfig()
 
 type Config struct {
 	App struct {
-		Name string `yaml:"Name"`
+		Name        string `yaml:"Name"`
+		LimitPerMin string `yaml:"LimitPerMin"`
 	} `yaml:"App"`
 	Postgres struct {
 		Host     string `yaml:"host"`

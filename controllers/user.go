@@ -1,11 +1,12 @@
 package controllers
 
 import (
-	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/mvc"
 	"irisProject/middlewares"
 	"irisProject/service"
 	"irisProject/utils"
+
+	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/mvc"
 )
 
 type UserController struct {
@@ -15,11 +16,13 @@ type UserController struct {
 
 func (c *UserController) BeforeActivation(app mvc.BeforeActivation) {
 	app.Handle("POST", "/login", "Login")
-	app.Handle("GET", "/", "GetUserList", middlewares.CheckJWTToken)
-	app.Handle("GET", "/{username:string}", "GetUser", middlewares.CheckJWTToken)
-	app.Handle("POST", "/", "CreateUser", middlewares.CheckJWTToken, middlewares.CheckSuper)
-	app.Handle("DELETE", "/{username:string}", "DeleteUser", middlewares.CheckJWTToken)
-	app.Handle("PUT", "/{username:string}", "UpdateUser", middlewares.CheckJWTToken)
+	app.Router().Use(middlewares.CheckJWTToken)
+	app.Handle("GET", "/", "GetUserList")
+	app.Handle("GET", "/{id:string}", "GetUser")
+	app.Router().Use(middlewares.CheckSuper)
+	app.Handle("POST", "/", "CreateUser")
+	app.Handle("DELETE", "/{id:string}", "DeleteUser")
+	app.Handle("PUT", "/{id:string}", "UpdateUser")
 }
 
 func (c *UserController) Login() {
@@ -50,9 +53,9 @@ func (c *UserController) Login() {
 }
 
 func (c *UserController) GetUserList() {
-	c.Context.Next()
+	defer c.Context.Next()
 	username := c.Context.URLParamDefault("username", "")
-	listParams, err := utils.GetListParamsFromContext(c.Context, "username")
+	listParams, err := utils.GetListParamsFromContext(c.Context, "users.username")
 	if err != nil {
 		return
 	}
@@ -69,18 +72,18 @@ func (c *UserController) GetUserList() {
 	c.Context.JSON(iris.Map{
 		"message": "success",
 		"data": iris.Map{
-			"users":    users,
-			"pageKey":  listParams.Page,
-			"limitKey": listParams.Limit,
-			"totalKey": count,
+			"users": users,
+			"page":  listParams.Page,
+			"limit": listParams.Limit,
+			"total": count,
 		},
 	})
-
 }
 
 func (c *UserController) GetUser() {
-	username := c.Context.Params().GetStringDefault("username", "")
-	user, err := c.Service.GetUser("username", username)
+	defer c.Context.Next()
+	id := c.Context.Params().Get("id")
+	user, err := c.Service.GetUser("id", id)
 	if err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService::GetUser", err)
 		return
@@ -94,6 +97,7 @@ func (c *UserController) GetUser() {
 }
 
 func (c *UserController) CreateUser() {
+	defer c.Context.Next()
 	var form UserCreateForm
 	err := utils.ReadValidateForm(c.Context, &form)
 	if err != nil {
@@ -113,9 +117,9 @@ func (c *UserController) CreateUser() {
 }
 
 func (c *UserController) DeleteUser() {
-	c.Context.Next()
-	username := c.Context.Params().GetStringDefault("username", "")
-	if err := c.Service.DeleteUser("username", username); err != nil {
+	defer c.Context.Next()
+	id := c.Context.Params().Get("id")
+	if err := c.Service.DeleteUser(id); err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService::DeleteUser", err)
 		return
 	}
@@ -124,15 +128,15 @@ func (c *UserController) DeleteUser() {
 }
 
 func (c *UserController) UpdateUser() {
-	c.Context.Next()
-	username := c.Context.Params().GetStringDefault("username", "")
+	defer c.Context.Next()
+	id := c.Context.Params().Get("id")
 	var form UserUpdateForm
 	if err := utils.ReadValidateForm(c.Context, &form); err != nil {
-		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService:UpdateUser", err)
+		utils.SetResponseError(c.Context, iris.StatusBadRequest, "paramKey", err)
 		return
 	}
 
-	if err := c.Service.UpdateUser("username", username, form.ConvertToModel()); err != nil {
+	if err := c.Service.UpdateUser(id, form.ConvertToModel()); err != nil {
 		utils.SetResponseError(c.Context, iris.StatusBadRequest, "UserService:UpdateUser", err)
 		return
 	}

@@ -1,6 +1,10 @@
 package models
 
+import uuid "github.com/satori/go.uuid"
+
 type Profile struct {
 	Base
-	Content string `json:"content"`
+	CreatorID uuid.UUID `json:"-"`
+	Content   string    `json:"content"`
+	Creator   User      `json:"creator"`
 }

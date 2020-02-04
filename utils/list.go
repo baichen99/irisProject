@@ -19,6 +19,12 @@ type GetUserListParameters struct {
 	Username string
 }
 
+// GetProfileListParameters parameters for GetProfileList queries
+type GetProfileListParameters struct {
+	GetListParameters
+	Content string
+}
+
 // SearchByColumn 模糊搜索
 func SearchByColumn(columnName string, searchString string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
@@ -49,7 +55,7 @@ func FilterByColumn(columnName string, value string) func(db *gorm.DB) *gorm.DB 
 // GetListParamsFromContext gets list params from context
 func GetListParamsFromContext(c iris.Context, orderName string) (listParmas GetListParameters, err error) {
 	listParmas.Page = c.URLParamIntDefault("page", 1)
-	listParmas.Limit = c.URLParamIntDefault("limit", 0) // 0 means no limit
+	listParmas.Limit = c.URLParamIntDefault("limit", 1)
 	listParmas.Order = c.URLParamDefault("order", "asc")
 	listParmas.OrderBy = c.URLParamDefault("orderBy", orderName)
 	return

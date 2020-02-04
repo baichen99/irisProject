@@ -1,9 +1,9 @@
 package service
 
 import (
+	"errors"
 	"irisProject/models"
 	"irisProject/utils"
-	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -24,9 +24,9 @@ func NewUserService(db *gorm.DB) UserInterface {
 type UserInterface interface {
 	GetUserList(parameters utils.GetUserListParameters) (users []models.User, count int, err error)
 	CreateUser(user models.User) (err error)
-	GetUser(key string, value interface{}) (user models.User, err error)
-	UpdateUser(key string, value interface{}, newUser models.User) (err error)
-	DeleteUser(key string, value interface{}) (err error)
+	GetUser(key string, value string) (user models.User, err error)
+	UpdateUser(id string, newUser models.User) (err error)
+	DeleteUser(id string) (err error)
 }
 
 // GetUserList return users
@@ -41,14 +41,16 @@ func (s *UserService) GetUserList(parameters utils.GetUserListParameters) (users
 		return
 	}
 
-	err = queryExp.Offset((parameters.Page - 1) * parameters.Limit).Limit(parameters.Limit).Find(&users).Error
+	err = queryExp.
+		Offset((parameters.Page - 1) * parameters.Limit).
+		Limit(parameters.Limit).
+		Find(&users).
+		Error
 	return
 }
 
 // CreateUser create a new user
 func (s *UserService) CreateUser(user models.User) (err error) {
-	user.CreateAt = time.Now()
-	user.Role = "user"
 	user.Password, err = utils.HashPassword(user.Password)
 	err = s.DB.Create(&user).Error
 	if err != nil {
@@ -58,42 +60,40 @@ func (s *UserService) CreateUser(user models.User) (err error) {
 }
 
 // GetUser Get a user by id
-func (s *UserService) GetUser(key string, value interface{}) (user models.User, err error) {
+func (s *UserService) GetUser(key string, value string) (user models.User, err error) {
 	switch key {
 	case "id":
 		err = s.DB.Where("id = ?", value).Take(&user).Error
 	case "username":
 		err = s.DB.Where("username = ?", value).Take(&user).Error
+	default:
+		err = errors.New("Unsupported key")
 	}
 	return
 }
 
 // UpdateUser update a user record
-func (s *UserService) UpdateUser(key string, value interface{}, newUser models.User) (err error) {
-	var user models.User
+func (s *UserService) UpdateUser(id string, newUser models.User) (err error) {
 	if newUser.Password != "" {
 		newUser.Password, err = utils.HashPassword(newUser.Password)
 		if err != nil {
 			return
 		}
 	}
-	switch key {
-	case "id":
-		err = s.DB.Where("id = ?", value).Update(&user).Error
-	case "username":
-		err = s.DB.Where("username = ?", value).Update(&user).Error
-	}
+	err = s.DB.
+		Model(&models.User{}).
+		Where("id = ?", id).
+		Updates(newUser).
+		Error
 	return
 }
 
 // DeleteUser delete a user record
-func (s *UserService) DeleteUser(key string, value interface{}) (err error) {
+func (s *UserService) DeleteUser(id string) (err error) {
 	var user models.User
-	switch key {
-	case "id":
-		err = s.DB.Where("id = ?", value).Delete(&user).Error
-	case "username":
-		err = s.DB.Where("username = ?", value).Delete(&user).Error
-	}
+	err = s.DB.
+		Where("id = ?", id).
+		Delete(&user).
+		Error
 	return
 }

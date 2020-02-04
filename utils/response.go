@@ -2,8 +2,8 @@ package utils
 
 import (
 	"github.com/kataras/iris/v12"
-	"runtime"
 	"gopkg.in/go-playground/validator.v9"
+	"runtime"
 )
 
 func SetResponseError(context iris.Context, statusCode int, logPrefix string, err error) {
